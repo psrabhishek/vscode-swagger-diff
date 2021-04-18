@@ -1,0 +1,66 @@
+{
+	"name": "vscode-swagger-diff",
+	"displayName": "Swagger Diff",
+	"publisher": "AbhishekPSR",
+	"description": "Checks if there are any breaking and other changes made to a Swagger file in Working Tree. It will help the Developers to know the impact of the changes they are applying.",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.55.0"
+	},
+	"icon": "images/icon.png",
+	"galleryBanner": {
+		"color": "#4a4a4a",
+		"theme": "dark"
+	},
+	"license": "SEE LICENSE IN LICENSE.md",
+  	"homepage": "https://github.com/psrabhishek/vscode-swagger-diff/blob/main/README.md",
+  	"bugs": {
+    	"url": "https://github.com/psrabhishek/vscode-swagger-diff/issues",
+    	"email": "psrabhishek2@gmail.com"
+  	},
+  	"repository": {
+    	"type": "git",
+    	"url": "https://github.com/psrabhishek/vscode-swagger-diff.git"
+  	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:vscode-swagger-diff.generateDiff"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscode-swagger-diff.generateDiff",
+				"title": "Swagger Diff"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.55.0",
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.0.4",
+		"@types/node": "^12.11.7",
+		"eslint": "^7.19.0",
+		"@typescript-eslint/eslint-plugin": "^4.14.1",
+		"@typescript-eslint/parser": "^4.14.1",
+		"glob": "^7.1.6",
+		"mocha": "^8.2.1",
+		"typescript": "^4.1.3",
+		"vscode-test": "^1.5.0"
+	},
+	"dependencies": {
+		"@apidevtools/swagger-parser": "^10.0.2",
+		"openapi-types": "^8.0.0",
+		"swagger-diff": "^0.6.0"
+	}
+}
