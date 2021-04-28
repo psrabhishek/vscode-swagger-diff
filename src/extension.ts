@@ -26,6 +26,8 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('vscode-swagger-diff.generateDiff', () => {
 
 		if (vscode.window.activeTextEditor) {
+			var editors = vscode.window.visibleTextEditors;
+
 			// Variable to store the data related to open/active file
 			var currentlyOpenDocument = vscode.window.activeTextEditor.document;
 			var currentlyOpenTabfileUri = currentlyOpenDocument.uri;
@@ -33,53 +35,77 @@ export function activate(context: vscode.ExtensionContext) {
 			var currentlyOpenTabfileName = path.basename(currentlyOpenTabfilePath);
 			var currentlyOpenTabfileDir = path.dirname(currentlyOpenTabfilePath);
 
-			console.log("Swagger Diff: Running on file - " + currentlyOpenTabfilePath);
-
-			// Validate the file to check if it is Swagger 2.0 spec and populate error message
-			// To Be Handled: since this is asynchronous, the program will still continue
-			// and another error message will also be shown stating the extenstion failed.
-			validateSwagger(currentlyOpenTabfilePath);
-
-			try {
-				// Load the Swagger Spec file (Working Changes)
-				var newSwaggerContent = currentlyOpenDocument.getText();
-				var newSwagger = JSON.parse(newSwaggerContent);
-				var noOfLines = newSwaggerContent.split("\n").length * 2;
-			}
-			catch (error) {
-				console.error(error);
-				return;
-			}
-
-			// Use a git diff command to store the diff in a temp file to use this command 
-			//we need to know the no of lines to output entire file instead of just 3 lines
-			// so it is easy to construct the actual index file (ol swagger file)
-			var gitDiffCommand = "git -C " + currentlyOpenTabfileDir + " diff -U" + noOfLines + " -- " + currentlyOpenTabfilePath + " > " + tempFileName;
-			console.log("Swagger Diff: git diff command - " + gitDiffCommand);
-			try{
-				execSync(gitDiffCommand);
-			}
-			catch(error){
-				console.error("Swagger Diff: Error during Git Diff Command");
-				vscode.window.showErrorMessage("Swagger Diff: Unable to perform 'git diff' on the file");
-				return;
-			}
-
-			// Load the old Swagger (index) from temp file
-			var diffContent = readFileSync(tempFilePath, { encoding: 'utf-8' });
 			var oldSwaggerContent = "";
-			var bodyStart = false;
+			var newSwagger = {};
+			var newSwaggerContent = "";
 
-			// construct the Old file 
-			var lines = diffContent.split("\n");
-			lines.forEach(function (line) {
-				if (line.startsWith("@@")) {
-					bodyStart = true;
+			console.log("Swagger Diff: Running on file - " + currentlyOpenTabfilePath);
+			vscode.window.showInformationMessage("Swagger Diff: Running on file - " + currentlyOpenTabfileName);
+
+			if (editors.length === 2) {
+				console.log("Swagger Diff: compare Mode");
+				var oldIndex = 0;
+				var newIndex = 1;
+				if (editors[0].viewColumn && editors[1].viewColumn && editors[0].viewColumn > editors[1].viewColumn) {
+					console.log("Swagger Diff: invert columns");
+					oldIndex = 1;
+					newIndex = 0;
 				}
-				if (bodyStart && (line.startsWith(" ") || line.startsWith("-"))) {
-					oldSwaggerContent = oldSwaggerContent + line.substr(1);
+				oldSwaggerContent = editors[oldIndex].document.getText();
+				validateSwagger(JSON.parse(oldSwaggerContent));
+				newSwaggerContent = editors[newIndex].document.getText();
+				newSwagger = JSON.parse(newSwaggerContent);
+				validateSwagger(newSwaggerContent);
+			}
+			else {
+
+				console.log("working Changes Mode");
+
+				// Validate the file to check if it is Swagger 2.0 spec and populate error message
+				// To Be Handled: since this is asynchronous, the program will still continue
+				// and another error message will also be shown stating the extenstion failed.
+				validateSwagger(currentlyOpenTabfilePath);
+
+				try {
+					// Load the Swagger Spec file (Working Changes)
+					var newSwaggerContent = currentlyOpenDocument.getText();
+					newSwagger = JSON.parse(newSwaggerContent);
+					var noOfLines = newSwaggerContent.split("\n").length * 2;
 				}
-			});
+				catch (error) {
+					console.error(error);
+					return;
+				}
+
+				// Use a git diff command to store the diff in a temp file to use this command 
+				//we need to know the no of lines to output entire file instead of just 3 lines
+				// so it is easy to construct the actual index file (ol swagger file)
+				var gitDiffCommand = "git -C " + currentlyOpenTabfileDir + " diff -U" + noOfLines + " -- " + currentlyOpenTabfilePath + " > " + tempFileName;
+				console.log("Swagger Diff: git diff command - " + gitDiffCommand);
+				try {
+					execSync(gitDiffCommand);
+				}
+				catch (error) {
+					console.error("Swagger Diff: Error during Git Diff Command");
+					vscode.window.showErrorMessage("Swagger Diff: Unable to perform 'git diff' on the file");
+					return;
+				}
+
+				// Load the old Swagger (index) from temp file
+				var diffContent = readFileSync(tempFilePath, { encoding: 'utf-8' });
+				var bodyStart = false;
+
+				// construct the Old file 
+				var lines = diffContent.split("\n");
+				lines.forEach(function (line) {
+					if (line.startsWith("@@")) {
+						bodyStart = true;
+					}
+					if (bodyStart && (line.startsWith(" ") || line.startsWith("-"))) {
+						oldSwaggerContent = oldSwaggerContent + line.substr(1);
+					}
+				});
+			}
 
 			if (oldSwaggerContent) {
 				var oldSwagger = JSON.parse(oldSwaggerContent);
@@ -101,13 +127,13 @@ export function activate(context: vscode.ExtensionContext) {
 				// Get the Swagger Diff
 				swaggerDiff(oldSwagger, newSwagger, config).then(function (diff: any) {
 					// Create a WebView to show the results
-					const panel = vscode.window.createWebviewPanel('swaggerDiff', 'Swagger Diff: ' + currentlyOpenTabfileName, vscode.ViewColumn.One, {});
+					const panel = vscode.window.createWebviewPanel('swaggerDiff', 'Swagger Diff: ' + currentlyOpenTabfileName, vscode.ViewColumn.Active, {});
 					// And set its HTML content
 					panel.webview.html = getSwaggerDiffTable(diff);
 				});
 
 			}
-			else{
+			else {
 				// git diff command will have no output when there is no change, hence oldSwaggerContent is empty
 				console.log("Swagger Diff: no Working Changes found");
 				vscode.window.showInformationMessage("Swagger Diff: No Working Changes found for '" + currentlyOpenTabfileName + "'");
@@ -138,7 +164,7 @@ function deleteFile(filePath: string) {
 		unlinkSync(filePath);
 		console.log("Swagger Diff: File is deleted.");
 	} catch (error) {
-		console.log(error);
+		console.log("Swagger Diff: error while deleting temp file: " + error.name);
 	}
 	return;
 }

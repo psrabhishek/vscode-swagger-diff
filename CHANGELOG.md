@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2021-April-28
+### Added
+- Default Keyboard Shortcut
+- side-by-side view support
+- diff view (git diff or gitLens) support
+
 ## [0.0.1] - 2021-April-18
 ### Added
 - initial release

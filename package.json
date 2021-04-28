@@ -3,7 +3,7 @@
 	"displayName": "Swagger Diff",
 	"publisher": "AbhishekPSR",
 	"description": "Checks if there are any breaking and other changes made to a Swagger file in Working Tree. It will help the Developers to know the impact of the changes they are applying.",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -13,15 +13,15 @@
 		"theme": "dark"
 	},
 	"license": "SEE LICENSE IN LICENSE.md",
-  	"homepage": "https://github.com/psrabhishek/vscode-swagger-diff/blob/main/README.md",
-  	"bugs": {
-    	"url": "https://github.com/psrabhishek/vscode-swagger-diff/issues",
-    	"email": "psrabhishek2@gmail.com"
-  	},
-  	"repository": {
-    	"type": "git",
-    	"url": "https://github.com/psrabhishek/vscode-swagger-diff.git"
-  	},
+	"homepage": "https://github.com/psrabhishek/vscode-swagger-diff/blob/main/README.md",
+	"bugs": {
+		"url": "https://github.com/psrabhishek/vscode-swagger-diff/issues",
+		"email": "psrabhishek2@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/psrabhishek/vscode-swagger-diff.git"
+	},
 	"categories": [
 		"Other"
 	],
@@ -35,7 +35,21 @@
 				"command": "vscode-swagger-diff.generateDiff",
 				"title": "Swagger Diff"
 			}
-		]
+		],
+		"keybindings": [
+			{
+				"command": "vscode-swagger-diff.generateDiff",
+				"key": "shift+alt+d",
+				"mac": "shift+alt+d",
+				"when": "editorTextFocus"
+			}
+		],
+		"jsonValidation": [
+			{
+			  "fileMatch": ".json",
+			  "url": "https://json.schemastore.org/swagger-2.0.json"
+			}
+		  ]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
